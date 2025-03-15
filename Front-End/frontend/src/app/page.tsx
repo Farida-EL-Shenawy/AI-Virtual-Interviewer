@@ -3,6 +3,38 @@ import Image from "next/image";
 export default function Home() {
   return (
     <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white dark:from-gray-900 dark:to-gray-800">
+      {/* Navigation Bar */}
+      <nav className="fixed top-0 left-0 right-0 z-50 mx-4 mt-4">
+        <div className="backdrop-blur-md bg-white/10 dark:bg-gray-900/60 rounded-2xl shadow-lg px-6 py-4">
+          <div className="container mx-auto flex items-center justify-between">
+            {/* Logo */}
+            <div className="flex items-center space-x-2">
+              <svg className="w-8 h-8 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+              </svg>
+              <span className="text-xl font-bold text-gray-900 dark:text-white">AI Virtual Interviewer</span>
+            </div>
+
+            {/* Navigation Links */}
+            <div className="hidden md:flex items-center space-x-8">
+              <a href="#" className="text-gray-700 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 transition-colors">Home</a>
+              <a href="#" className="text-gray-700 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 transition-colors">About</a>
+              <a href="#" className="text-gray-700 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 transition-colors">Features</a>
+              <a href="#" className="text-gray-700 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 transition-colors">Contact</a>
+            </div>
+
+            {/* Auth Buttons */}
+            <div className="flex items-center space-x-4">
+              <button className="px-4 py-2 text-gray-700 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 transition-colors">
+                Login
+              </button>
+              <button className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg transition-colors">
+                Sign Up
+              </button>
+            </div>
+          </div>
+        </div>
+      </nav>
       {/* Hero Section */}
       <div className="container mx-auto px-4 py-16 sm:py-24">
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
