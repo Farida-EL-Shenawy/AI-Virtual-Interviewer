@@ -51,7 +51,7 @@ const Hero = () => {
           >
             <div className="relative w-full max-w-2xl mx-auto -mt-8">
               <Image
-                src="/images/ai.png"
+                src="/images/Hero.png"
                 alt="AI Virtual Interviewer"
                 width={1000}
                 height={1000}
