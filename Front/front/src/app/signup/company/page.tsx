@@ -58,7 +58,7 @@ export default function CompanySignup() {
     if (Object.keys(newErrors).length === 0) {
       // TODO: Implement API call to register company
       console.log('Form submitted:', formData);
-      router.push('/dashboard');
+      router.push('/login');
     } else {
       setErrors(newErrors);
     }

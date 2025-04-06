@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { motion } from 'framer-motion';
 import Image from 'next/image';
 import Link from 'next/link';
+import Sidebar from '@/components/Sidebar';
 
 interface JobPost {
   id: number;
@@ -85,13 +86,15 @@ export default function JobsPage() {
   };
 
   return (
-    <div className="min-h-screen pt-16 pb-12 bg-gradient-to-b from-gray-900 to-black">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5 }}
-        >
+    <div className="flex min-h-screen bg-gradient-to-b from-gray-900 to-black">
+      <Sidebar role={isCandidate ? 'candidate' : 'company'} />
+      <div className="flex-1 pt-16 pb-12 pl-64">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5 }}
+          >
           {/* Page Header */}
           <div className="text-center mb-12">
             <h1 className="text-4xl font-bold text-white mb-4">Job Opportunities</h1>
@@ -236,5 +239,6 @@ export default function JobsPage() {
         </motion.div>
       </div>
     </div>
+  </div>
   );
 }

@@ -62,7 +62,7 @@ export default function CandidateSignup() {
     if (Object.keys(newErrors).length === 0) {
       // TODO: Implement API call to register candidate
       console.log('Form submitted:', formData);
-      router.push('/dashboard');
+      router.push('/login');
     } else {
       setErrors(newErrors);
     }

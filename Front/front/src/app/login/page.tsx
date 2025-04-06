@@ -36,7 +36,6 @@ export default function LoginPage() {
     if (Object.keys(newErrors).length === 0) {
       // TODO: Implement API call for login
       console.log('Form submitted:', formData);
-      router.push('/dashboard');
     } else {
       setErrors(newErrors);
     }
