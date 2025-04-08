@@ -2,9 +2,8 @@
 
 import { useState } from 'react';
 import { motion } from 'framer-motion';
-import Image from 'next/image';
-import Link from 'next/link';
 import Sidebar from '@/components/Sidebar';
+import JobPostForm from '@/components/JobPostForm';
 
 interface JobPost {
   id: number;
@@ -21,39 +20,63 @@ interface JobPost {
 }
 
 export default function JobsPage() {
-  const [isCandidate, setIsCandidate] = useState(true); // TODO: Replace with actual auth check
   const [searchQuery, setSearchQuery] = useState('');
   const [filterType, setFilterType] = useState('all');
+  const [selectedJob, setSelectedJob] = useState<JobPost | null>(null);
+  const [isJobModalOpen, setIsJobModalOpen] = useState(false);
+
+  const handleJobSubmit = (formData) => {
+    // TODO: Implement API call to create/update job
+    if (selectedJob) {
+      // Update existing job
+      setJobs(prev => prev.map(job => 
+        job.id === selectedJob.id 
+          ? {
+              ...job,
+              title: formData.title,
+              location: formData.location,
+              type: formData.type,
+              salary: formData.salary,
+              description: formData.description,
+              requirements: formData.requirements,
+            }
+          : job
+      ));
+    } else {
+      // Add new job
+      setJobs(prev => [...prev, {
+        id: prev.length + 1,
+        title: formData.title,
+        company: 'Tech Corp', // Replace with actual company name
+        location: formData.location,
+        type: formData.type,
+        salary: formData.salary,
+        description: formData.description,
+        requirements: formData.requirements,
+        postedDate: formData.postedDate,
+        applicants: 0,
+        status: 'Active'
+      }]);
+    }
+
+    setSelectedJob(null);
+    setIsJobModalOpen(false);
+  };
 
   // Mock data - replace with actual API calls
-  const [jobs, setJobs] = useState<JobPost[]>([
-    {
-      id: 1,
-      title: 'Senior Software Engineer',
-      company: 'Tech Corp',
-      location: 'New York, NY',
-      type: 'Full-time',
-      salary: '$120,000 - $150,000',
-      description: 'We are looking for an experienced software engineer to join our team...',
-      requirements: '5+ years of experience in web development, strong JavaScript skills...',
-      postedDate: '2024-02-20',
-      applicants: 45,
-      status: 'Active'
-    },
-    {
-      id: 2,
-      title: 'UI/UX Designer',
-      company: 'Design Studio',
-      location: 'Remote',
-      type: 'Contract',
-      salary: '$80,000 - $100,000',
-      description: 'Seeking a creative UI/UX designer to help shape our product...',
-      requirements: '3+ years of experience in UI/UX design, proficiency in Figma...',
-      postedDate: '2024-02-18',
-      applicants: 28,
-      status: 'Active'
-    }
-  ]);
+  const [jobs, setJobs] = useState<JobPost[]>([{
+    id: 1,
+    title: 'Senior Software Engineer',
+    company: 'Tech Corp',
+    location: 'New York, NY',
+    type: 'Full-time',
+    salary: '$120,000 - $150,000',
+    description: 'We are looking for an experienced software engineer to join our team...',
+    requirements: '5+ years of experience in web development, strong JavaScript skills...',
+    postedDate: '2024-02-20',
+    applicants: 45,
+    status: 'Active'
+  }]);
 
   const filteredJobs = jobs.filter(job => {
     const matchesSearch = job.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -65,29 +88,28 @@ export default function JobsPage() {
     return matchesSearch && matchesType;
   });
 
-  const handleApply = (jobId: number) => {
-    // TODO: Implement apply functionality
-    console.log('Applying for job:', jobId);
-  };
-
-  const handleSave = (jobId: number) => {
-    // TODO: Implement save functionality
-    console.log('Saving job:', jobId);
-  };
-
   const handleEdit = (jobId: number) => {
-    // TODO: Implement edit functionality
-    console.log('Editing job:', jobId);
+    const job = jobs.find(j => j.id === jobId);
+    if (job) {
+      setSelectedJob({
+        ...job,
+        recruitmentPeriod: {
+          start: job.postedDate,
+          end: ''
+        }
+      });
+      setIsJobModalOpen(true);
+    }
   };
 
   const handleDelete = (jobId: number) => {
     // TODO: Implement delete functionality
-    console.log('Deleting job:', jobId);
+    setJobs(prev => prev.filter(job => job.id !== jobId));
   };
 
   return (
-    <div className="flex min-h-screen bg-gradient-to-b from-gray-900 to-black">
-      <Sidebar role={isCandidate ? 'candidate' : 'company'} />
+    <div className="flex min-h-screen bg-gradient-to-b from-violet-900 to-black">
+      <Sidebar role="company" />
       <div className="flex-1 pt-16 pb-12 pl-64">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <motion.div
@@ -97,10 +119,8 @@ export default function JobsPage() {
           >
           {/* Page Header */}
           <div className="text-center mb-12">
-            <h1 className="text-4xl font-bold text-white mb-4">Job Opportunities</h1>
-            <p className="text-xl text-gray-300">
-              {isCandidate ? 'Find your next career opportunity' : 'Manage your job postings'}
-            </p>
+            <h1 className="text-4xl font-bold text-white mb-4">Manage Job Postings</h1>
+            <p className="text-xl text-gray-300">Create and manage your company's job opportunities</p>
           </div>
 
           {/* Search and Filters */}
@@ -109,7 +129,7 @@ export default function JobsPage() {
               <div className="relative">
                 <input
                   type="text"
-                  placeholder="Search jobs by title, company, or location"
+                  placeholder="Search jobs by title or location"
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   className="w-full rounded-lg bg-gray-800 border border-gray-700 text-white px-4 py-2 pl-10 focus:outline-none focus:ring-2 focus:ring-blue-500"
@@ -135,17 +155,15 @@ export default function JobsPage() {
                 <option value="internship">Internship</option>
               </select>
 
-              {!isCandidate && (
-                <Link
-                  href="/jobs/create"
-                  className="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors duration-150"
-                >
-                  <svg className="-ml-1 mr-2 h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-                  </svg>
-                  Post New Job
-                </Link>
-              )}
+              <button
+                onClick={() => setIsJobModalOpen(true)}
+                className="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors duration-150"
+              >
+                <svg className="-ml-1 mr-2 h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                </svg>
+                Post New Job
+              </button>
             </div>
           </div>
 
@@ -191,54 +209,40 @@ export default function JobsPage() {
                     : job.description}
                 </div>
 
-                {isCandidate ? (
-                  <div className="flex items-center justify-between">
+                <div className="flex items-center justify-between">
+                  <div className="text-gray-300 text-sm">
+                    <span className="font-medium">{job.applicants}</span> applicants
+                  </div>
+                  <div className="flex items-center space-x-2">
                     <button
-                      onClick={() => handleApply(job.id)}
-                      className="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors duration-150"
-                    >
-                      Apply Now
-                    </button>
-                    <button
-                      onClick={() => handleSave(job.id)}
-                      className="inline-flex items-center px-3 py-2 border border-gray-600 rounded-md text-sm font-medium text-gray-300 hover:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors duration-150"
+                      onClick={() => handleEdit(job.id)}
+                      className="p-2 text-gray-300 hover:text-white transition-colors duration-150"
                     >
                       <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z" />
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                      </svg>
+                    </button>
+                    <button
+                      onClick={() => handleDelete(job.id)}
+                      className="p-2 text-gray-300 hover:text-red-500 transition-colors duration-150"
+                    >
+                      <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
                       </svg>
                     </button>
                   </div>
-                ) : (
-                  <div className="flex items-center justify-between">
-                    <div className="text-gray-300 text-sm">
-                      <span className="font-medium">{job.applicants}</span> applicants
-                    </div>
-                    <div className="flex items-center space-x-2">
-                      <button
-                        onClick={() => handleEdit(job.id)}
-                        className="p-2 text-gray-300 hover:text-white transition-colors duration-150"
-                      >
-                        <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-                        </svg>
-                      </button>
-                      <button
-                        onClick={() => handleDelete(job.id)}
-                        className="p-2 text-gray-300 hover:text-red-500 transition-colors duration-150"
-                      >
-                        <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                        </svg>
-                      </button>
-                    </div>
-                  </div>
-                )}
+                </div>
               </motion.div>
             ))}
           </div>
         </motion.div>
       </div>
     </div>
-  </div>
+      <JobPostForm
+        isOpen={isJobModalOpen}
+        onClose={() => setIsJobModalOpen(false)}
+        onSubmit={handleJobSubmit}
+      />
+    </div>
   );
 }

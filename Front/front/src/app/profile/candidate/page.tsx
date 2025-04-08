@@ -60,7 +60,7 @@ export default function CandidateDashboard() {
   });
 
   return (
-    <div className="flex min-h-screen bg-gradient-to-b from-gray-900 to-black">
+    <div className="flex min-h-screen bg-gradient-to-b from-blue-900 to-black">
       <Sidebar role="candidate" />
       <div className="flex-1 pt-16 pb-12 pl-64">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
