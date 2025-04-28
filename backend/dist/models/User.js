@@ -36,103 +36,74 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.User = exports.UserValidationSchema = void 0;
+exports.User = exports.UserRole = void 0;
 const mongoose_1 = __importStar(require("mongoose"));
 const bcryptjs_1 = __importDefault(require("bcryptjs"));
-const zod_1 = require("zod");
-// User validation schema
-exports.UserValidationSchema = zod_1.z.object({
-    email: zod_1.z.string().email('Invalid email format'),
-    password: zod_1.z.string().min(8, 'Password must be at least 8 characters'),
-    role: zod_1.z.enum(['candidate', 'company', 'admin']),
-    firstName: zod_1.z.string().min(2, 'First name must be at least 2 characters'),
-    lastName: zod_1.z.string().min(2, 'Last name must be at least 2 characters'),
-    company: zod_1.z.string().optional(),
-    position: zod_1.z.string().optional(),
-    profileComplete: zod_1.z.boolean().default(false),
-});
+var UserRole;
+(function (UserRole) {
+    UserRole["COMPANY"] = "company";
+    UserRole["CANDIDATE"] = "candidate";
+})(UserRole || (exports.UserRole = UserRole = {}));
 const userSchema = new mongoose_1.Schema({
     email: {
         type: String,
         required: true,
         unique: true,
         trim: true,
-        lowercase: true,
-        index: true, // Index for faster queries
+        lowercase: true
     },
-    password: {
+    passwordHash: {
         type: String,
-        required: true,
-        minlength: 8,
+        required: true
     },
     role: {
         type: String,
-        enum: ['candidate', 'company', 'admin'],
-        required: true,
-        index: true, // Index for role-based queries
+        enum: Object.values(UserRole),
+        required: true
     },
-    firstName: {
+    name: {
         type: String,
         required: true,
-        trim: true,
+        trim: true
     },
-    lastName: {
-        type: String,
-        required: true,
-        trim: true,
-    },
-    company: {
+    companyName: {
         type: String,
         trim: true,
-        sparse: true, // Sparse index for optional field
+        required: function () {
+            return this.role === UserRole.COMPANY;
+        }
     },
-    position: {
+    resumePath: {
         type: String,
-        trim: true,
+        required: function () {
+            return this.role === UserRole.CANDIDATE;
+        }
     },
-    profileComplete: {
-        type: Boolean,
-        default: false,
-    },
-    lastLogin: {
+    createdAt: {
         type: Date,
-        default: Date.now,
-    },
+        default: Date.now
+    }
 }, {
-    timestamps: true, // Automatically manage createdAt and updatedAt
+    timestamps: true,
     toJSON: {
-        transform: (_doc, ret) => {
-            delete ret.password; // Remove password from JSON responses
+        transform: function (doc, ret) {
+            delete ret.passwordHash;
             return ret;
-        },
-    },
-});
-// Index for common queries
-userSchema.index({ createdAt: -1 });
-userSchema.index({ lastLogin: -1 });
-// Compound index for company users
-userSchema.index({ company: 1, role: 1 }, { sparse: true });
-// Hash password before saving
-userSchema.pre('save', async function (next) {
-    if (!this.isModified('password'))
-        return next();
-    try {
-        const salt = await bcryptjs_1.default.genSalt(10);
-        this.password = await bcryptjs_1.default.hash(this.password, salt);
-        next();
-    }
-    catch (error) {
-        next(error);
+        }
     }
 });
-// Compare password method
-userSchema.methods.comparePassword = async function (candidatePassword) {
-    try {
-        return await bcryptjs_1.default.compare(candidatePassword, this.password);
-    }
-    catch (error) {
-        throw new Error('Password comparison failed');
-    }
+// Index for email lookups
+userSchema.index({ email: 1 });
+// Password comparison method
+userSchema.methods.comparePassword = async function (password) {
+    return bcryptjs_1.default.compare(password, this.passwordHash);
 };
+// Pre-save middleware to hash password
+userSchema.pre('save', async function (next) {
+    if (this.isModified('passwordHash')) {
+        this.passwordHash = await bcryptjs_1.default.hash(this.passwordHash, 12);
+    }
+    next();
+});
 exports.User = mongoose_1.default.model('User', userSchema);
 //# sourceMappingURL=User.js.map

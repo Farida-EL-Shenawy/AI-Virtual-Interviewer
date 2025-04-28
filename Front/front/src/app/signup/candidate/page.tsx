@@ -60,9 +60,19 @@ export default function CandidateSignup() {
     e.preventDefault();
     const newErrors = validateForm();
     if (Object.keys(newErrors).length === 0) {
-      // TODO: Implement API call to register candidate
-      console.log('Form submitted:', formData);
-      router.push('/login');
+      try {
+        await AuthService.signup({
+          firstName: formData.firstName,
+          lastName: formData.lastName,
+          email: formData.email,
+          password: formData.password,
+          role: 'candidate',
+          cv: formData.cv,
+        });
+        router.push('/login');
+      } catch (error) {
+        setErrors({ form: error.message || 'Signup failed' });
+      }
     } else {
       setErrors(newErrors);
     }
