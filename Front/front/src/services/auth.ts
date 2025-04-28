@@ -3,6 +3,42 @@ import { LoginCredentials, SignupData, User, AuthError } from '../types/auth';
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001/api';
 
 export class AuthService {
+  static async forgotPassword(email: string): Promise<void> {
+    try {
+      const response = await fetch(`${API_BASE_URL}/auth/forgot-password`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ email }),
+      });
+
+      if (!response.ok) {
+        throw response;
+      }
+    } catch (error) {
+      throw this.handleError(error as Error);
+    }
+  }
+
+  static async resetPassword(data: { email: string; password: string }): Promise<void> {
+    try {
+      const response = await fetch(`${API_BASE_URL}/auth/reset-password`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(data),
+      });
+
+      if (!response.ok) {
+        throw response;
+      }
+    } catch (error) {
+      throw this.handleError(error as Error);
+    }
+  }
+
   static async login(credentials: LoginCredentials): Promise<User> {
     try {
       const response = await fetch(`${API_BASE_URL}/auth/login`, {
@@ -93,6 +129,13 @@ export class AuthService {
           return {
             message: 'Invalid credentials',
             code: 'AUTH_INVALID_CREDENTIALS',
+            statusCode,
+            timestamp
+          };
+    case 400:
+          return {
+            message: 'Invalid request',
+            code: 'AUTH_INVALID_INPUT',
             statusCode,
             timestamp
           };
