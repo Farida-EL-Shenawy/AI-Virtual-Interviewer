@@ -1,97 +1,89 @@
 'use client';
 
 import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import { AuthService } from '../services/auth';
+import { User, LoginCredentials, SignupData, AuthError } from '../types/auth';
 
-type User = {
-  id: string;
-  email: string;
-  role: 'candidate' | 'company';
-  name?: string;
-  profileImage?: string;
-};
-
-type AuthContextType = {
+interface AuthContextType {
   user: User | null;
   loading: boolean;
-  login: (email: string, password: string) => Promise<void>;
+  error: AuthError | null;
+  login: (credentials: LoginCredentials) => Promise<void>;
   logout: () => Promise<void>;
-  signup: (userData: any) => Promise<void>;
-};
+  signup: (userData: SignupData) => Promise<void>;
+  clearError: () => void;
+}
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<AuthError | null>(null);
 
   useEffect(() => {
-    // Check for existing session
     checkAuth();
   }, []);
 
   const checkAuth = async () => {
     try {
-      // TODO: Implement actual session check
-      const session = localStorage.getItem('user');
-      if (session) {
-        setUser(JSON.parse(session));
-      }
+      const user = await AuthService.checkSession();
+      setUser(user);
     } catch (error) {
-      console.error('Auth check failed:', error);
+      setError(error as AuthError);
     } finally {
       setLoading(false);
     }
   };
 
-  const login = async (email: string, password: string) => {
+  const login = async (credentials: LoginCredentials) => {
     try {
-      // TODO: Implement actual login API call
-      const mockUser = {
-        id: '1',
-        email,
-        role: 'candidate' as const,
-        name: 'John Doe',
-        profileImage: '/images/avatar.png'
-      };
-      localStorage.setItem('user', JSON.stringify(mockUser));
-      setUser(mockUser);
+      setLoading(true);
+      setError(null);
+      const user = await AuthService.login(credentials);
+      setUser(user);
     } catch (error) {
-      console.error('Login failed:', error);
+      setError(error as AuthError);
       throw error;
+    } finally {
+      setLoading(false);
     }
   };
 
   const logout = async () => {
     try {
-      // TODO: Implement actual logout API call
-      localStorage.removeItem('user');
+      setLoading(true);
+      setError(null);
+      await AuthService.logout();
       setUser(null);
     } catch (error) {
-      console.error('Logout failed:', error);
+      setError(error as AuthError);
       throw error;
+    } finally {
+      setLoading(false);
     }
   };
 
-  const signup = async (userData: any) => {
+  const signup = async (userData: SignupData) => {
     try {
-      // TODO: Implement actual signup API call
-      const mockUser = {
-        id: '1',
-        email: userData.email,
-        role: userData.role || 'candidate' as const,
-        name: `${userData.firstName} ${userData.lastName}`,
-        profileImage: '/images/avatar.png'
-      };
-      localStorage.setItem('user', JSON.stringify(mockUser));
-      setUser(mockUser);
+      setLoading(true);
+      setError(null);
+      const user = await AuthService.signup(userData);
+      setUser(user);
     } catch (error) {
-      console.error('Signup failed:', error);
+      setError(error as AuthError);
       throw error;
+    } finally {
+      setLoading(false);
     }
+  };
+
+  const clearError = () => {
+    setError(null);
   };
 
   return (
-    <AuthContext.Provider value={{ user, loading, login, logout, signup }}>
+    <AuthContext.Provider value={{ user, loading, error, login, logout, signup, clearError }}>
       {children}
     </AuthContext.Provider>
   );
