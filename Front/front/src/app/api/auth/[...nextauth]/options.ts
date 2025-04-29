@@ -77,7 +77,34 @@ export const authOptions: NextAuthOptions = {
     },
   },
   session: {
-    strategy: 'jwt',
+    jwt: true,
   },
-  secret: process.env.NEXTAUTH_SECRET,
+  callbacks: {
+    async session({ session, token }) {
+      session.user = token.user;
+      return session;
+    },
+    async jwt({ token, user }) {
+      if (user) {
+        token.user = user;
+      }
+      return token;
+    }
+  },
+  pages: {
+    signIn: '/login',
+    signOut: '/logout',
+    error: '/error',
+    verifyRequest: '/verify-request',
+    newUser: '/welcome'
+  },
+  events: {
+    async signIn(message) {
+      console.log('User signed in:', message);
+    },
+    async signOut(message) {
+      console.log('User signed out:', message);
+    }
+  },
+  debug: true
 };

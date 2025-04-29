@@ -9,7 +9,7 @@ export default function DashboardLayout({
   children: React.ReactNode;
 }) {
   const { isLoading, isAuthenticated, user } = useAuth({
-    required: true,
+    required: false,
   });
 
   if (isLoading) {
@@ -20,9 +20,10 @@ export default function DashboardLayout({
     );
   }
 
-  if (!isAuthenticated || !user) {
-    return null; // The useAuth hook will handle the redirect
-  }
+  // Remove authentication check
+  // if (!isAuthenticated || !user) {
+  //   return null; // The useAuth hook will handle the redirect
+  // }
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-gray-900 to-black">
