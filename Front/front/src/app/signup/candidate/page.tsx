@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { motion } from 'framer-motion';
 import { useRouter } from 'next/navigation';
 import { signIn } from 'next-auth/react';
+import { AuthService } from '@/services/auth';
 import Image from 'next/image';
 
 export default function CandidateSignup() {
@@ -14,6 +15,8 @@ export default function CandidateSignup() {
     email: '',
     password: '',
     confirmPassword: '',
+    linkedin: '',
+    phone: '',
     cv: null
   });
 
@@ -30,7 +33,7 @@ export default function CandidateSignup() {
   const handleFileChange = (e) => {
     const file = e.target.files[0];
     if (file) {
-      if (file.size > 5 * 1024 * 1024) { // 5MB limit
+      if (file.size > 5 * 1024 * 1024) {
         setErrors(prev => ({ ...prev, cv: 'File size must be less than 5MB' }));
         return;
       }
@@ -52,7 +55,8 @@ export default function CandidateSignup() {
     if (!formData.password) newErrors.password = 'Password is required';
     else if (formData.password.length < 8) newErrors.password = 'Password must be at least 8 characters';
     if (formData.password !== formData.confirmPassword) newErrors.confirmPassword = 'Passwords do not match';
-    if (!formData.cv) newErrors.cv = 'CV is required';
+    if (!formData.phone) newErrors.phone = 'Phone number is required';
+    if (!formData.linkedin) newErrors.linkedin = 'LinkedIn URL is required';
     return newErrors;
   };
 
@@ -68,6 +72,8 @@ export default function CandidateSignup() {
           password: formData.password,
           role: 'candidate',
           cv: formData.cv,
+          phone: formData.phone,
+          linkedin: formData.linkedin
         });
         router.push('/login');
       } catch (error) {
@@ -98,7 +104,7 @@ export default function CandidateSignup() {
                   name="firstName"
                   value={formData.firstName}
                   onChange={handleChange}
-                  className="mt-1 block w-full rounded-md bg-gray-800 border border-gray-600 text-white px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="mt-1 block w-full rounded-md bg-gray-800 border border-gray-600 text-white px-3 py-2"
                 />
                 {errors.firstName && <p className="mt-1 text-sm text-red-500">{errors.firstName}</p>}
               </div>
@@ -110,23 +116,50 @@ export default function CandidateSignup() {
                   name="lastName"
                   value={formData.lastName}
                   onChange={handleChange}
-                  className="mt-1 block w-full rounded-md bg-gray-800 border border-gray-600 text-white px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="mt-1 block w-full rounded-md bg-gray-800 border border-gray-600 text-white px-3 py-2"
                 />
                 {errors.lastName && <p className="mt-1 text-sm text-red-500">{errors.lastName}</p>}
               </div>
             </div>
 
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div>
+                <label htmlFor="email" className="block text-sm font-medium text-gray-300">Email</label>
+                <input
+                  type="email"
+                  id="email"
+                  name="email"
+                  value={formData.email}
+                  onChange={handleChange}
+                  className="mt-1 block w-full rounded-md bg-gray-800 border border-gray-600 text-white px-3 py-2"
+                />
+                {errors.email && <p className="mt-1 text-sm text-red-500">{errors.email}</p>}
+              </div>
+              <div>
+                <label htmlFor="phone" className="block text-sm font-medium text-gray-300">Phone</label>
+                <input
+                  type="text"
+                  id="phone"
+                  name="phone"
+                  value={formData.phone}
+                  onChange={handleChange}
+                  className="mt-1 block w-full rounded-md bg-gray-800 border border-gray-600 text-white px-3 py-2"
+                />
+                {errors.phone && <p className="mt-1 text-sm text-red-500">{errors.phone}</p>}
+              </div>
+            </div>
+
             <div>
-              <label htmlFor="email" className="block text-sm font-medium text-gray-300">Email</label>
+              <label htmlFor="linkedin" className="block text-sm font-medium text-gray-300">LinkedIn Profile</label>
               <input
-                type="email"
-                id="email"
-                name="email"
-                value={formData.email}
+                type="text"
+                id="linkedin"
+                name="linkedin"
+                value={formData.linkedin}
                 onChange={handleChange}
-                className="mt-1 block w-full rounded-md bg-gray-800 border border-gray-600 text-white px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="mt-1 block w-full rounded-md bg-gray-800 border border-gray-600 text-white px-3 py-2"
               />
-              {errors.email && <p className="mt-1 text-sm text-red-500">{errors.email}</p>}
+              {errors.linkedin && <p className="mt-1 text-sm text-red-500">{errors.linkedin}</p>}
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -138,7 +171,7 @@ export default function CandidateSignup() {
                   name="password"
                   value={formData.password}
                   onChange={handleChange}
-                  className="mt-1 block w-full rounded-md bg-gray-800 border border-gray-600 text-white px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="mt-1 block w-full rounded-md bg-gray-800 border border-gray-600 text-white px-3 py-2"
                 />
                 {errors.password && <p className="mt-1 text-sm text-red-500">{errors.password}</p>}
               </div>
@@ -150,63 +183,51 @@ export default function CandidateSignup() {
                   name="confirmPassword"
                   value={formData.confirmPassword}
                   onChange={handleChange}
-                  className="mt-1 block w-full rounded-md bg-gray-800 border border-gray-600 text-white px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="mt-1 block w-full rounded-md bg-gray-800 border border-gray-600 text-white px-3 py-2"
                 />
                 {errors.confirmPassword && <p className="mt-1 text-sm text-red-500">{errors.confirmPassword}</p>}
               </div>
             </div>
 
             <div>
-              <label htmlFor="cv" className="block text-sm font-medium text-gray-300">Upload CV (PDF or Word, max 5MB)</label>
+              <label htmlFor="cv" className="block text-sm font-medium text-gray-300">Upload CV (Optional)</label>
               <input
                 type="file"
                 id="cv"
                 name="cv"
                 accept=".pdf,.doc,.docx"
                 onChange={handleFileChange}
-                className="mt-1 block w-full text-sm text-gray-300
-                  file:mr-4 file:py-2 file:px-4
-                  file:rounded-md file:border-0
-                  file:text-sm file:font-semibold
-                  file:bg-blue-600 file:text-white
-                  hover:file:bg-blue-700
-                  file:cursor-pointer"
+                className="mt-1 block w-full text-sm text-gray-300 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-blue-600 file:text-white hover:file:bg-blue-700 file:cursor-pointer"
               />
               {errors.cv && <p className="mt-1 text-sm text-red-500">{errors.cv}</p>}
             </div>
 
-            <div className="space-y-4">
-              <button
-                type="submit"
-                className="w-full flex justify-center py-3 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition duration-150 ease-in-out"
-              >
-                Sign Up
-              </button>
+            <button
+              type="submit"
+              className="w-full flex justify-center py-3 px-4 rounded-md text-white bg-blue-600 hover:bg-blue-700 transition"
+            >
+              Sign Up
+            </button>
 
-              <div className="relative">
-                <div className="absolute inset-0 flex items-center">
-                  <div className="w-full border-t border-gray-600"></div>
-                </div>
-                <div className="relative flex justify-center text-sm">
-                  <span className="px-2 bg-gray-900 text-gray-400">Or continue with</span>
-                </div>
+            <div className="relative">
+              <div className="absolute inset-0 flex items-center">
+                <div className="w-full border-t border-gray-600"></div>
               </div>
-
-              <button
-                type="button"
-                onClick={() => signIn('google', { callbackUrl: '/dashboard' })}
-                className="w-full flex items-center justify-center gap-3 py-3 px-4 border border-gray-600 rounded-md shadow-sm text-sm font-medium text-white hover:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition duration-150 ease-in-out"
-              >
-                <Image
-                  src="/images/google.svg"
-                  alt="Google"
-                  width={20}
-                  height={20}
-                  className="w-5 h-5"
-                />
-                Google
-              </button>
+              <div className="relative flex justify-center text-sm">
+                <span className="px-2 bg-gray-900 text-gray-400">Or continue with</span>
+              </div>
             </div>
+
+            <button
+              type="button"
+              onClick={() => signIn('google', { callbackUrl: '/dashboard' })}
+              className="w-full flex items-center justify-center gap-3 py-3 px-4 border border-gray-600 rounded-md text-sm font-medium text-white hover:bg-gray-800"
+            >
+              <Image src="/images/google.svg" alt="Google" width={20} height={20} className="w-5 h-5" />
+              Google
+            </button>
+
+            {errors.form && <p className="text-sm text-red-500 text-center mt-4">{errors.form}</p>}
           </form>
         </div>
       </motion.div>
