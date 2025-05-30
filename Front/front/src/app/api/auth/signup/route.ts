@@ -34,7 +34,7 @@ export async function POST(req: Request) {
 
     const newUser = {
       email,
-      passwordHash,
+      password: passwordHash,
       name: `${firstName} ${lastName}`,
       role: 'candidate',
       candidateProfile: {

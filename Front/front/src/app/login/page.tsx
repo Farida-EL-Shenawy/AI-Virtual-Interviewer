@@ -4,9 +4,7 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { motion } from 'framer-motion';
 import Link from 'next/link';
-import { signIn } from 'next-auth/react';
 import { FcGoogle } from 'react-icons/fc';
-import { AuthError } from '@/types/auth';
 
 export default function LoginPage() {
   const router = useRouter();
@@ -19,7 +17,7 @@ export default function LoginPage() {
   const [errors, setErrors] = useState<{ [key: string]: string }>({});
   const [authError, setAuthError] = useState<string | null>(null);
 
-  const handleChange = (e) => {
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
     setFormData(prev => ({
       ...prev,
@@ -28,7 +26,7 @@ export default function LoginPage() {
   };
 
   const validateForm = () => {
-    const newErrors = {};
+    const newErrors: { [key: string]: string } = {};
     if (!formData.email) newErrors.email = 'Email is required';
     else if (!/\S+@\S+\.\S+/.test(formData.email)) newErrors.email = 'Email is invalid';
     if (!formData.password) newErrors.password = 'Password is required';
@@ -41,17 +39,24 @@ export default function LoginPage() {
     if (Object.keys(newErrors).length === 0) {
       setIsLoading(true);
       setAuthError(null);
-      
+
       try {
-        const result = await signIn('credentials', {
-          email: formData.email,
-          password: formData.password,
-          redirect: false,
+        const res = await fetch('/api/auth/login', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            email: formData.email,
+            password: formData.password
+          }),
         });
 
-        if (result?.error) {
-          setAuthError('Invalid email or password');
+        const data = await res.json();
+
+        if (!res.ok) {
+          setAuthError(data.message || 'Invalid email or password');
         } else {
+          // Assuming your API returns a token or session info on success
+          // You can store token here if needed (e.g., localStorage) or just redirect
           router.push('/dashboard');
           router.refresh();
         }
@@ -128,7 +133,7 @@ export default function LoginPage() {
 
               <button
                 type="button"
-                onClick={() => signIn('google', { callbackUrl: '/dashboard' })}
+                onClick={() => alert('Google OAuth not handled in this setup')}
                 className="w-full flex items-center justify-center gap-2 py-3 px-4 border border-gray-600 rounded-md shadow-sm text-sm font-medium text-white hover:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500 transition duration-150 ease-in-out"
               >
                 <FcGoogle className="w-5 h-5" />

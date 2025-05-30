@@ -29,7 +29,7 @@ export function useAuth(options: UseAuthOptions = {}) {
     if (isAuthenticated && allowedRoles?.length && user?.role) {
       if (!allowedRoles.includes(user.role)) {
         const fallbackRoute = user.role === 'candidate' ? '/dashboard/candidate' : '/dashboard/company';
-        // router.push(fallbackRoute);
+        router.push(fallbackRoute);
       }
     }
   }, [isLoading, isAuthenticated, required, redirectTo, allowedRoles, user?.role, router]);
