@@ -50,11 +50,17 @@ export class AuthService {
         body: JSON.stringify(credentials),
       });
 
+      const data = await response.json();
+
       if (!response.ok) {
-        throw response;
+        throw new Error(data.message || `Login failed with status: ${response.status}`);
       }
 
-      return await response.json();
+      if (!data.user) {
+        throw new Error('User data not found in login response');
+      }
+
+      return data.user as User;
     } catch (error) {
       throw this.handleError(error as Error);
     }

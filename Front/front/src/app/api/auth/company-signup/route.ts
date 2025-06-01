@@ -11,14 +11,12 @@ export async function POST(req: Request) {
 
     const email = formData.get('email')?.toString();
     const password = formData.get('password')?.toString();
-    const firstName = formData.get('firstName')?.toString();
-    const lastName = formData.get('lastName')?.toString();
-    const phone = formData.get('phone')?.toString();
-    const linkedin = formData.get('linkedin')?.toString();
-    const cv = formData.get('cv'); // optional File
+    const companyName = formData.get('companyName')?.toString();
+    const website = formData.get('website')?.toString(); // Optional
+    const address = formData.get('address')?.toString(); // Optional
 
-    if (!email || !password || !firstName || !lastName || !phone || !linkedin) {
-      return NextResponse.json({ message: 'Missing fields' }, { status: 400 });
+    if (!email || !password || !companyName) {
+      return NextResponse.json({ message: 'Missing required fields: email, password, and company name' }, { status: 400 });
     }
 
     const client = await MongoClient.connect(MONGODB_URI);
@@ -35,13 +33,12 @@ export async function POST(req: Request) {
     const newUser = {
       email,
       passwordHash: passwordHash,
-      name: `${firstName} ${lastName}`,
-      role: 'candidate',
-      candidateProfile: {
-        phone,
-        socialLinks: {
-          linkedin
-        },
+      name: companyName, // Using companyName as the 'name' for company users
+      role: 'company',
+      companyProfile: {
+        companyName,
+        website,
+        address,
       },
       createdAt: new Date(),
       updatedAt: new Date(),
@@ -49,9 +46,9 @@ export async function POST(req: Request) {
 
     await users.insertOne(newUser);
 
-    return NextResponse.json({ message: 'User created successfully' }, { status: 201 });
+    return NextResponse.json({ message: 'Company user created successfully' }, { status: 201 });
   } catch (error) {
     console.error(error);
     return NextResponse.json({ message: 'Internal Server Error' }, { status: 500 });
   }
-}
+} 
