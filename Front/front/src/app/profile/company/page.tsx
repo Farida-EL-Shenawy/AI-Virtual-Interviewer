@@ -1,8 +1,8 @@
 'use client';
 
 import { useState } from 'react';
+import { useRouter } from 'next/navigation';
 import { motion } from 'framer-motion';
-import JobPostForm from '@/components/JobPostForm';
 import Image from 'next/image';
 import Sidebar from '@/components/Sidebar';
 import { Bar, Line } from 'react-chartjs-2';
@@ -11,29 +11,7 @@ import { Chart as ChartJS, CategoryScale, LinearScale, BarElement, LineElement, 
 ChartJS.register(CategoryScale, LinearScale, BarElement, LineElement, Title, Tooltip, Legend, PointElement);
 
 export default function CompanyProfile() {
-  const [isJobModalOpen, setIsJobModalOpen] = useState(false);
-
-  const handleJobSubmit = (formData) => {
-    // TODO: Implement API call to create job
-    console.log('Creating new job:', formData);
-    
-    // Add new job to profile data
-    setProfileData(prev => ({
-      ...prev,
-      activeJobs: [...prev.activeJobs, {
-        id: prev.activeJobs.length + 1,
-        title: formData.title,
-        department: formData.department,
-        type: formData.type,
-        status: 'Active',
-        applicants: 0,
-        qualifiedApplicants: 0,
-        interviewsScheduled: 0
-      }]
-    }));
-
-    setIsJobModalOpen(false);
-  };
+  const router = useRouter();
 
   // Mock data - replace with actual API calls
   const [profileData, setProfileData] = useState({
@@ -213,10 +191,10 @@ export default function CompanyProfile() {
               <div className="flex justify-between items-center mb-6">
                 <h2 className="text-2xl font-bold text-white">Active Job Postings</h2>
                 <button
-                  onClick={() => setIsJobModalOpen(true)}
+                  onClick={() => router.push('/profile/company/jobs')}
                   className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors duration-200"
                 >
-                  Post New Job
+                  Manage Jobs
                 </button>
               </div>
               <div className="overflow-x-auto">
@@ -255,74 +233,6 @@ export default function CompanyProfile() {
           </motion.div>
         </div>
       </div>
-
-      <JobPostForm
-        isOpen={isJobModalOpen}
-        onClose={() => setIsJobModalOpen(false)}
-        onSubmit={handleJobSubmit}
-      />
     </div>
   );
 }
-
-  const handleJobSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    const newErrors: Record<string, string> = {};
-
-    // Validate required fields
-    if (!newJob.title) newErrors.title = 'Job title is required';
-    if (!newJob.department) newErrors.department = 'Department is required';
-    if (!newJob.hiringManager) newErrors.hiringManager = 'Hiring manager is required';
-    if (!newJob.recruitmentPeriod.start) newErrors.recruitmentStart = 'Start date is required';
-    if (!newJob.recruitmentPeriod.end) newErrors.recruitmentEnd = 'End date is required';
-    if (!newJob.quota || newJob.quota < 1) newErrors.quota = 'Valid quota is required';
-    if (!newJob.location) newErrors.location = 'Location is required';
-    if (!newJob.description) newErrors.description = 'Job description is required';
-    if (!newJob.requirements) newErrors.requirements = 'Requirements are required';
-
-    if (Object.keys(newErrors).length > 0) {
-      setFormErrors(newErrors);
-      return;
-    }
-
-    try {
-      // TODO: Implement API call to create job
-      console.log('Creating new job:', newJob);
-      
-      // Add new job to profile data
-      setProfileData(prev => ({
-        ...prev,
-        activeJobs: [...prev.activeJobs, {
-          id: prev.activeJobs.length + 1,
-          title: newJob.title,
-          department: newJob.department,
-          type: newJob.type,
-          status: 'Active',
-          applicants: 0,
-          location: newJob.location,
-          salary: newJob.salary,
-          quota: newJob.quota,
-          headerImage: newJob.headerImage
-        }]
-      }));
-
-      // Reset form and close modal
-      setNewJob({
-        title: '',
-        department: '',
-        type: 'Full-time',
-        hiringManager: '',
-        recruitmentPeriod: { start: '', end: '' },
-        quota: 1,
-        salary: '',
-        location: '',
-        description: '',
-        requirements: ''
-      });
-      setIsJobModalOpen(false);
-      setFormErrors({});
-    } catch (error) {
-      console.error('Error creating job:', error);
-      setFormErrors({ submit: 'Failed to create job. Please try again.' });
-    }
-  };

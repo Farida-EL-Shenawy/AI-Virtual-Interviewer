@@ -2,12 +2,20 @@ import { NextAuthOptions } from 'next-auth';
 import GoogleProvider from 'next-auth/providers/google';
 import CredentialsProvider from 'next-auth/providers/credentials';
 import { AuthService } from '@/services/auth';
+import { Role, User } from '@/types/auth';
 
 export const authOptions: NextAuthOptions = {
   providers: [
     GoogleProvider({
       clientId: process.env.GOOGLE_CLIENT_ID || '',
       clientSecret: process.env.GOOGLE_CLIENT_SECRET || '',
+      authorization: {
+        params: {
+          prompt: "consent",
+          access_type: "offline",
+          response_type: "code"
+        }
+      }
     }),
     CredentialsProvider({
       name: 'Credentials',
@@ -26,85 +34,65 @@ export const authOptions: NextAuthOptions = {
             password: credentials.password,
           });
           
-          return {
-            id: user.id,
-            email: user.email,
-            name: user.name,
-            role: user.role,
-            image: user.profileImage,
-          };
+          if (user) {
+            return user;
+          }
+          return null;
         } catch (error) {
-          throw new Error('Invalid credentials');
+          console.error("Authorize error:", error);
+          return null;
         }
       }
     })
   ],
-  pages: {
-    signIn: '/login',
-    error: '/login',
-  },
-  callbacks: {
-    async jwt({ token, user, account }) {
-      if (user) {
-        token.role = user.role;
-        token.id = user.id;
-      }
-      return token;
-    },
-    async session({ session, token }) {
-      if (session.user) {
-        session.user.role = token.role as string;
-        session.user.id = token.id as string;
-      }
-      return session;
-    },
-    async signIn({ user, account, profile }) {
-      if (account?.provider === 'google') {
-        try {
-          // Handle Google sign-in, create/update user in your database
-          await AuthService.handleGoogleSignIn({
-            email: user.email!,
-            name: user.name!,
-            image: user.image,
-          });
-          return true;
-        } catch (error) {
-          console.error('Google sign-in error:', error);
-          return false;
-        }
-      }
-      return true;
-    },
-  },
+  
   session: {
-    jwt: true,
+    strategy: 'jwt',
   },
-  callbacks: {
-    async session({ session, token }) {
-      session.user = token.user;
-      return session;
-    },
-    async jwt({ token, user }) {
-      if (user) {
-        token.user = user;
-      }
-      return token;
-    }
-  },
+
   pages: {
     signIn: '/login',
+    error: '/login', // Error code passed in query string as ?error=
     signOut: '/logout',
-    error: '/error',
-    verifyRequest: '/verify-request',
-    newUser: '/welcome'
   },
+
+  callbacks: {
+    async jwt({ token, user }) {
+      // The 'user' object is only passed on the first sign-in.
+      if (user) {
+        token.id = user.id;
+        token.role = user.role;
+      }
+      return token;
+    },
+    async session({ session, token }) {
+      // We are adding the user's id and role to the session object
+      if (session.user) {
+        session.user.id = token.id as string;
+        session.user.role = token.role as Role;
+      }
+      return session;
+    },
+    async signIn({ user, account }) {
+      if (account?.provider === 'google') {
+        if (!user.email) return false; // Or handle error
+        // You might want to implement a specific service for Google Sign-In
+        // that finds or creates a user in your database.
+        // For now, we'll assume a user with this email can sign in.
+        return true; 
+      }
+      return true; // For credentials provider
+    },
+  },
+
   events: {
     async signIn(message) {
-      console.log('User signed in:', message);
+      console.log('User signed in:', message.user.email);
     },
     async signOut(message) {
-      console.log('User signed out:', message);
+      console.log('User signed out:', message.token.email);
     }
   },
-  debug: true
+
+  debug: process.env.NODE_ENV === 'development',
 };

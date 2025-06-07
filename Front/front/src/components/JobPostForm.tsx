@@ -2,25 +2,22 @@
 
 import { useState, useEffect } from 'react';
 import { Dialog } from '@headlessui/react';
+import { useSession } from 'next-auth/react';
 
 interface JobFormData {
-  id?: number;
   title: string;
-  department: string;
-  type: string;
-  hiringManager: string;
-  recruitmentPeriod: {
-    start: string;
-    end: string;
-  };
-  quota: number;
-  salary: string;
-  location: string;
   description: string;
-  requirements: string;
-  postedDate?: string;
-  applicants?: number;
-  status?: string;
+  location: string;
+  employmentType: 'full_time' | 'part_time' | 'contract' | 'internship';
+  remoteOption: boolean;
+  salaryRange: {
+    min?: number;
+    max?: number;
+    currency: string;
+  };
+  requirements: string[];
+  preferredTraits: string[];
+  tags: string[];
 }
 
 interface JobPostFormProps {
@@ -33,23 +30,27 @@ interface JobPostFormProps {
 
 const defaultFormData: JobFormData = {
   title: '',
-  department: '',
-  type: 'Full-time',
-  hiringManager: '',
-  recruitmentPeriod: {
-    start: '',
-    end: ''
-  },
-  quota: 1,
-  salary: '',
-  location: '',
   description: '',
-  requirements: ''
+  location: '',
+  employmentType: 'full_time',
+  remoteOption: false,
+  salaryRange: {
+    min: 0,
+    max: 0,
+    currency: 'USD'
+  },
+  requirements: [],
+  preferredTraits: [],
+  tags: [],
 };
 
 export default function JobPostForm({ isOpen, onClose, onSubmit, mode = 'create', initialData }: JobPostFormProps) {
+  const { data: session } = useSession();
   const [formErrors, setFormErrors] = useState<Record<string, string>>({});
   const [formData, setFormData] = useState<JobFormData>(defaultFormData);
+  const [requirementInput, setRequirementInput] = useState('');
+  const [traitInput, setTraitInput] = useState('');
+  const [tagInput, setTagInput] = useState('');
 
   useEffect(() => {
     if (mode === 'edit' && initialData) {
@@ -59,37 +60,37 @@ export default function JobPostForm({ isOpen, onClose, onSubmit, mode = 'create'
     }
   }, [mode, initialData, isOpen]);
 
+  const handleAddItem = (field: 'requirements' | 'preferredTraits' | 'tags', value: string) => {
+    if (value.trim() !== '') {
+      setFormData(prev => ({ ...prev, [field]: [...prev[field], value.trim()] }));
+      if (field === 'requirements') setRequirementInput('');
+      if (field === 'preferredTraits') setTraitInput('');
+      if (field === 'tags') setTagInput('');
+    }
+  };
+
+  const handleRemoveItem = (field: 'requirements' | 'preferredTraits' | 'tags', index: number) => {
+    setFormData(prev => ({
+      ...prev,
+      [field]: prev[field].filter((_, i) => i !== index)
+    }));
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     const newErrors: Record<string, string> = {};
 
-    // Validate required fields
     if (!formData.title) newErrors.title = 'Job title is required';
-    if (!formData.department) newErrors.department = 'Department is required';
-    if (!formData.hiringManager) newErrors.hiringManager = 'Hiring manager is required';
-    if (!formData.recruitmentPeriod.start) newErrors.recruitmentStart = 'Start date is required';
-    if (!formData.recruitmentPeriod.end) newErrors.recruitmentEnd = 'End date is required';
-    if (!formData.quota || formData.quota < 1) newErrors.quota = 'Valid quota is required';
-    if (!formData.location) newErrors.location = 'Location is required';
     if (!formData.description) newErrors.description = 'Job description is required';
-    if (!formData.requirements) newErrors.requirements = 'Requirements are required';
+    if (!formData.location) newErrors.location = 'Location is required';
 
     if (Object.keys(newErrors).length > 0) {
       setFormErrors(newErrors);
       return;
     }
 
-    // Prepare data for submission
-const submissionData = {
-  ...formData,
-  postedDate: formData.postedDate || new Date().toISOString().split('T')[0],
-  applicants: formData.applicants || 0,
-  status: formData.status || 'Active'
-};
-
-onSubmit(submissionData);
+    onSubmit(formData);
     onClose();
-    // Reset form only in create mode
     if (mode === 'create') {
       setFormData(defaultFormData);
     }
@@ -116,70 +117,6 @@ onSubmit(submissionData);
                 {formErrors.title && <p className="mt-1 text-sm text-red-500">{formErrors.title}</p>}
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-300 mb-2">Department</label>
-                <input
-                  type="text"
-                  value={formData.department}
-                  onChange={(e) => setFormData({ ...formData, department: e.target.value })}
-                  className="w-full bg-gray-800 border border-gray-700 rounded-lg px-4 py-2 text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
-                />
-                {formErrors.department && <p className="mt-1 text-sm text-red-500">{formErrors.department}</p>}
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-300 mb-2">Job Type</label>
-                <select
-                  value={formData.type}
-                  onChange={(e) => setFormData({ ...formData, type: e.target.value })}
-                  className="w-full bg-gray-800 border border-gray-700 rounded-lg px-4 py-2 text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
-                >
-                  <option value="Full-time">Full-time</option>
-                  <option value="Part-time">Part-time</option>
-                  <option value="Contract">Contract</option>
-                  <option value="Internship">Internship</option>
-                </select>
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-300 mb-2">Hiring Manager</label>
-                <input
-                  type="text"
-                  value={formData.hiringManager}
-                  onChange={(e) => setFormData({ ...formData, hiringManager: e.target.value })}
-                  className="w-full bg-gray-800 border border-gray-700 rounded-lg px-4 py-2 text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
-                />
-                {formErrors.hiringManager && <p className="mt-1 text-sm text-red-500">{formErrors.hiringManager}</p>}
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-300 mb-2">Start Date</label>
-                <input
-                  type="date"
-                  value={formData.recruitmentPeriod.start}
-                  onChange={(e) => setFormData({ ...formData, recruitmentPeriod: { ...formData.recruitmentPeriod, start: e.target.value } })}
-                  className="w-full bg-gray-800 border border-gray-700 rounded-lg px-4 py-2 text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
-                />
-                {formErrors.recruitmentStart && <p className="mt-1 text-sm text-red-500">{formErrors.recruitmentStart}</p>}
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-300 mb-2">End Date</label>
-                <input
-                  type="date"
-                  value={formData.recruitmentPeriod.end}
-                  onChange={(e) => setFormData({ ...formData, recruitmentPeriod: { ...formData.recruitmentPeriod, end: e.target.value } })}
-                  className="w-full bg-gray-800 border border-gray-700 rounded-lg px-4 py-2 text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
-                />
-                {formErrors.recruitmentEnd && <p className="mt-1 text-sm text-red-500">{formErrors.recruitmentEnd}</p>}
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-300 mb-2">Quota</label>
-                <input
-                  type="number"
-                  min="1"
-                  value={formData.quota}
-                  onChange={(e) => setFormData({ ...formData, quota: parseInt(e.target.value) })}
-                  className="w-full bg-gray-800 border border-gray-700 rounded-lg px-4 py-2 text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
-                />
-                {formErrors.quota && <p className="mt-1 text-sm text-red-500">{formErrors.quota}</p>}
-              </div>
-              <div>
                 <label className="block text-sm font-medium text-gray-300 mb-2">Location</label>
                 <input
                   type="text"
@@ -190,13 +127,55 @@ onSubmit(submissionData);
                 {formErrors.location && <p className="mt-1 text-sm text-red-500">{formErrors.location}</p>}
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-300 mb-2">Salary</label>
-                <input
-                  type="text"
-                  value={formData.salary}
-                  onChange={(e) => setFormData({ ...formData, salary: e.target.value })}
+                <label className="block text-sm font-medium text-gray-300 mb-2">Employment Type</label>
+                <select
+                  value={formData.employmentType}
+                  onChange={(e) => setFormData({ ...formData, employmentType: e.target.value as any })}
+                  className="w-full bg-gray-800 border border-gray-700 rounded-lg px-4 py-2 text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                >
+                  <option value="full_time">Full-time</option>
+                  <option value="part_time">Part-time</option>
+                  <option value="contract">Contract</option>
+                  <option value="internship">Internship</option>
+                </select>
+              </div>
+              <div className="flex items-center">
+                  <input
+                    type="checkbox"
+                    checked={formData.remoteOption}
+                    onChange={(e) => setFormData({ ...formData, remoteOption: e.target.checked })}
+                    className="h-4 w-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500"
+                  />
+                  <label className="ml-2 block text-sm text-gray-300">Remote Option</label>
+              </div>
+              <div className="grid grid-cols-3 gap-2">
+                <div>
+                    <label className="block text-sm font-medium text-gray-300 mb-2">Min Salary</label>
+                    <input
+                    type="number"
+                    value={formData.salaryRange.min || ''}
+                    onChange={(e) => setFormData({ ...formData, salaryRange: {...formData.salaryRange, min: parseFloat(e.target.value)} })}
+                    className="w-full bg-gray-800 border border-gray-700 rounded-lg px-4 py-2 text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    />
+                </div>
+                <div>
+                    <label className="block text-sm font-medium text-gray-300 mb-2">Max Salary</label>
+                    <input
+                    type="number"
+                    value={formData.salaryRange.max || ''}
+                    onChange={(e) => setFormData({ ...formData, salaryRange: {...formData.salaryRange, max: parseFloat(e.target.value)} })}
+                    className="w-full bg-gray-800 border border-gray-700 rounded-lg px-4 py-2 text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    />
+                </div>
+                <div>
+                    <label className="block text-sm font-medium text-gray-300 mb-2">Currency</label>
+                    <input
+                    type="text"
+                    value={formData.salaryRange.currency}
+                    onChange={(e) => setFormData({ ...formData, salaryRange: {...formData.salaryRange, currency: e.target.value} })}
                   className="w-full bg-gray-800 border border-gray-700 rounded-lg px-4 py-2 text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
                 />
+                </div>
               </div>
             </div>
             <div>
@@ -209,27 +188,54 @@ onSubmit(submissionData);
               />
               {formErrors.description && <p className="mt-1 text-sm text-red-500">{formErrors.description}</p>}
             </div>
+
+            {/* Requirements */}
             <div>
               <label className="block text-sm font-medium text-gray-300 mb-2">Requirements</label>
-              <textarea
-                value={formData.requirements}
-                onChange={(e) => setFormData({ ...formData, requirements: e.target.value })}
-                rows={4}
-                className="w-full bg-gray-800 border border-gray-700 rounded-lg px-4 py-2 text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
-              />
-              {formErrors.requirements && <p className="mt-1 text-sm text-red-500">{formErrors.requirements}</p>}
+                <div className="flex">
+                    <input type="text" value={requirementInput} onChange={e => setRequirementInput(e.target.value)} className="w-full bg-gray-800 border border-gray-700 rounded-l-lg px-4 py-2 text-white focus:outline-none focus:ring-2 focus:ring-blue-500" />
+                    <button type="button" onClick={() => handleAddItem('requirements', requirementInput)} className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-r-lg">Add</button>
+                </div>
+                <ul className="mt-2 space-y-2">
+                    {formData.requirements.map((item, index) => <li key={index} className="flex justify-between items-center bg-gray-800 p-2 rounded-lg"><span>{item}</span><button type="button" onClick={() => handleRemoveItem('requirements', index)} className="text-red-500 hover:text-red-700">Remove</button></li>)}
+                </ul>
             </div>
-            <div className="flex justify-end space-x-4">
+            
+            {/* Preferred Traits */}
+            <div>
+                <label className="block text-sm font-medium text-gray-300 mb-2">Preferred Traits</label>
+                <div className="flex">
+                    <input type="text" value={traitInput} onChange={e => setTraitInput(e.target.value)} className="w-full bg-gray-800 border border-gray-700 rounded-l-lg px-4 py-2 text-white focus:outline-none focus:ring-2 focus:ring-blue-500" />
+                    <button type="button" onClick={() => handleAddItem('preferredTraits', traitInput)} className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-r-lg">Add</button>
+                </div>
+                <ul className="mt-2 space-y-2">
+                    {formData.preferredTraits.map((item, index) => <li key={index} className="flex justify-between items-center bg-gray-800 p-2 rounded-lg"><span>{item}</span><button type="button" onClick={() => handleRemoveItem('preferredTraits', index)} className="text-red-500 hover:text-red-700">Remove</button></li>)}
+                </ul>
+            </div>
+
+            {/* Tags */}
+            <div>
+                <label className="block text-sm font-medium text-gray-300 mb-2">Tags</label>
+                <div className="flex">
+                    <input type="text" value={tagInput} onChange={e => setTagInput(e.target.value)} className="w-full bg-gray-800 border border-gray-700 rounded-l-lg px-4 py-2 text-white focus:outline-none focus:ring-2 focus:ring-blue-500" />
+                    <button type="button" onClick={() => handleAddItem('tags', tagInput)} className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-r-lg">Add</button>
+                </div>
+                <ul className="mt-2 space-y-2">
+                    {formData.tags.map((item, index) => <li key={index} className="flex justify-between items-center bg-gray-800 p-2 rounded-lg"><span>{item}</span><button type="button" onClick={() => handleRemoveItem('tags', index)} className="text-red-500 hover:text-red-700">Remove</button></li>)}
+                </ul>
+            </div>
+
+            <div className="flex justify-end space-x-4 pt-6">
               <button
                 type="button"
                 onClick={onClose}
-                className="px-4 py-2 text-sm font-medium text-gray-300 hover:text-white focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                className="px-6 py-2 text-sm font-medium text-gray-300 rounded-lg hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
               >
                 Cancel
               </button>
               <button
                 type="submit"
-                className="inline-flex justify-center px-4 py-2 text-sm font-medium text-white bg-blue-600 border border-transparent rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                className="inline-flex justify-center px-6 py-2 text-sm font-medium text-white bg-blue-600 border border-transparent rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
               >
                 {mode === 'edit' ? 'Save Changes' : 'Create Job'}
               </button>
