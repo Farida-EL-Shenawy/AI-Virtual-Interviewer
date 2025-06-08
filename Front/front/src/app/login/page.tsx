@@ -37,9 +37,9 @@ export default function LoginPage() {
   useEffect(() => {
     if (user && !authLoading) {
       if (user.role === 'candidate') {
-        router.push('/dashboard/candidate');
+        router.push('/profile/candidate');
       } else if (user.role === 'company') {
-        router.push('/dashboard/company');
+        router.push('/profile/company');
       } else {
         // Fallback or default dashboard if role is not defined
         router.push('/dashboard'); 

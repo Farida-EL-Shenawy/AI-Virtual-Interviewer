@@ -4,15 +4,13 @@ import { useState } from 'react';
 import { motion } from 'framer-motion';
 import Sidebar from '@/components/Sidebar';
 import Link from 'next/link';
+import { useAuth } from '@/contexts/AuthContext';
+
 
 export default function CandidateDashboard() {
   // Mock data - replace with actual API calls
+  const { user } = useAuth();
   const [dashboardData, setDashboardData] = useState({
-    user: {
-      name: 'John Doe',
-      upcomingInterviews: 2,
-      completedPractices: 15
-    },
     upcomingInterviews: [
       {
         id: 1,
@@ -71,7 +69,15 @@ export default function CandidateDashboard() {
           >
             {/* Welcome Section */}
             <div className="text-center mb-12">
-              <h1 className="text-4xl font-bold text-white mb-4">Welcome back, {dashboardData.user.name}!</h1>
+            {user ? (
+  <h1 className="text-4xl font-bold text-white mb-4">
+    Welcome back, {user.name}!
+  </h1>
+) : (
+  <h1 className="text-4xl font-bold text-white mb-4">
+    Welcome back!
+  </h1>
+)}
               <p className="text-xl text-gray-300">Your interview preparation hub</p>
             </div>
 

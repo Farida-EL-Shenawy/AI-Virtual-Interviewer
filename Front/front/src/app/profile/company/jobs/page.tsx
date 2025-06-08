@@ -5,6 +5,8 @@ import { motion } from 'framer-motion';
 import { useSession } from 'next-auth/react';
 import Sidebar from '@/components/Sidebar';
 import JobPostForm from '@/components/JobPostForm';
+import { useAuth } from '@/contexts/AuthContext';
+
 
 interface JobFormData {
   title: string;
@@ -32,12 +34,14 @@ interface JobPost extends JobFormData {
 }
 
 export default function JobsPage() {
+  const { user } = useAuth();
   const { data: session } = useSession();
   const [searchQuery, setSearchQuery] = useState('');
   const [filterType, setFilterType] = useState('all');
   const [jobs, setJobs] = useState<JobPost[]>([]);
   const [selectedJob, setSelectedJob] = useState<JobPost | null>(null);
   const [isJobModalOpen, setIsJobModalOpen] = useState(false);
+
 
   useEffect(() => {
     fetchJobs();
@@ -57,17 +61,17 @@ export default function JobsPage() {
     }
   };
 
+
   const handleJobSubmit = async (formData: JobFormData) => {
     console.log('handleJobSubmit called with:', formData);
-    // if (!session?.user?.id) {
-    //   console.error('User not authenticated');
-    //   return;
-    // }
+    if (!user?.id) {
+      console.error('User not authenticated');
+      return;
+    }
 
-    // console.log(session?.user.id)
     const jobData = {
       ...formData,
-      companyId: session.user.id,
+      companyId: user.id,
     };
     console.log('Submitting job data:', jobData);
 

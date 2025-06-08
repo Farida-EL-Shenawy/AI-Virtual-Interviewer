@@ -47,14 +47,8 @@ export default function Navigation() {
                   className="flex items-center space-x-2 text-gray-300 hover:text-white transition-colors"
                 >
                   <div className="relative w-8 h-8 rounded-full overflow-hidden">
-                    <Image 
-                      src={user.profileImage || '/images/avatar.png'} 
-                      alt="Profile" 
-                      fill
-                      className="object-cover"
-                    />
-                  </div>
-                  <span className="text-sm font-bold">{user.name}</span>
+
+                  </div><span className="text-sm font-bold">{user.name}</span>
                 </Link>
                 <button
                   onClick={() => logout()}
