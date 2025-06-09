@@ -50,12 +50,25 @@ export async function POST(req: NextRequest) {
   }
 }
 
-export async function GET() {
+export async function GET(req: NextRequest) {
   console.log("Received GET request to /api/jobs");
   try {
+    const { searchParams } = new URL(req.url);
+    const companyId = searchParams.get('companyId');
+    
     const db = await connectToDatabase();
     const jobposts = db.collection('jobposts');
-    const jobs = await jobposts.find({ status: 'active' }).toArray();
+    
+    const query: { status: string; companyId?: ObjectId } = { status: 'active' };
+
+    if (companyId) {
+      if (!ObjectId.isValid(companyId)) {
+        return NextResponse.json({ message: 'Invalid company ID format' }, { status: 400 });
+      }
+      query.companyId = new ObjectId(companyId);
+    }
+
+    const jobs = await jobposts.find(query).toArray();
     console.log("Fetched jobs:", jobs.length);
     return NextResponse.json(jobs, { status: 200 });
   } catch (error) {

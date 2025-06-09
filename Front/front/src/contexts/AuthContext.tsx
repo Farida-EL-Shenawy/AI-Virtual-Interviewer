@@ -9,7 +9,7 @@ interface AuthContextType {
   loading: boolean;
   error: AuthError | null;
   login: (credentials: LoginCredentials) => Promise<void>;
-  logout: () => Promise<void>;
+  logout: (callbackUrl?: string) => Promise<void>;
   signup: (userData: SignupData) => Promise<void>;
   clearError: () => void;
 }
@@ -50,12 +50,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   };
 
-  const logout = async () => {
+  const logout = async (callbackUrl?: string) => {
     try {
       setLoading(true);
       setError(null);
       await AuthService.logout();
       setUser(null);
+      if (callbackUrl) {
+        window.location.href = callbackUrl;
+      }
     } catch (error) {
       setError(error as AuthError);
       throw error;

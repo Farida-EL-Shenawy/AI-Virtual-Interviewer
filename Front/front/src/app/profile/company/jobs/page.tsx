@@ -44,12 +44,15 @@ export default function JobsPage() {
 
 
   useEffect(() => {
-    fetchJobs();
-  }, []);
+    if (user?.id) {
+      fetchJobs();
+    }
+  }, [user]);
 
   const fetchJobs = async () => {
+    if (!user?.id) return;
     try {
-      const response = await fetch('/api/jobs');
+      const response = await fetch(`/api/jobs?companyId=${user.id}`);
       if (response.ok) {
         const data = await response.json();
         setJobs(data);
@@ -118,8 +121,26 @@ export default function JobsPage() {
   };
 
   const handleDelete = async (jobId: string) => {
-    // Implement delete functionality
-    console.log('Delete job:', jobId);
+    if (!confirm('Are you sure you want to delete this job post?')) {
+      return;
+    }
+
+    try {
+      const response = await fetch(`/api/jobs/${jobId}`, {
+        method: 'DELETE',
+      });
+
+      if (response.ok) {
+        console.log('Job deleted successfully');
+        setJobs(prevJobs => prevJobs.filter(job => job._id !== jobId));
+      } else {
+        console.error('Failed to delete job');
+        const errorData = await response.json();
+        console.error('Error details:', errorData);
+      }
+    } catch (error) {
+      console.error('Error deleting job:', error);
+    }
   };
 
   return (

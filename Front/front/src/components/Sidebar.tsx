@@ -159,19 +159,28 @@ export default function Sidebar({ role }: SidebarProps) {
         <nav className="flex-1 space-y-1 px-2">
           {menuItems.map((item) => {
             const isActive = pathname === item.href;
-            const isInterviewAccess = item.name === 'Interview Access';
-            const Component = isInterviewAccess ? 'button' : Link;
-            
+            if (item.name === 'Interview Access') {
+              return (
+                <button
+                  key={item.name}
+                  onClick={() => setShowInterviewAccess(true)}
+                  type="button"
+                  className={`flex items-center px-2 py-2 text-sm font-medium rounded-lg transition-colors duration-200 w-full ${isActive
+                    ? 'bg-blue-600 text-white'
+                    : 'text-gray-300 hover:bg-gray-800 hover:text-white'
+                    }`}
+                >
+                  <item.icon
+                    className={`w-6 h-6 ${isCollapsed ? 'mx-auto' : 'mr-3'} flex-shrink-0`}
+                  />
+                  {!isCollapsed && <span>{item.name}</span>}
+                </button>
+              );
+            }
             return (
-              <Component
+              <Link
                 key={item.name}
-                {...(isInterviewAccess 
-                  ? { 
-                      onClick: () => setShowInterviewAccess(true),
-                      type: 'button'
-                    } 
-                  : { href: item.href }
-                )}
+                href={item.href}
                 className={`flex items-center px-2 py-2 text-sm font-medium rounded-lg transition-colors duration-200 w-full ${isActive
                   ? 'bg-blue-600 text-white'
                   : 'text-gray-300 hover:bg-gray-800 hover:text-white'
@@ -181,7 +190,7 @@ export default function Sidebar({ role }: SidebarProps) {
                   className={`w-6 h-6 ${isCollapsed ? 'mx-auto' : 'mr-3'} flex-shrink-0`}
                 />
                 {!isCollapsed && <span>{item.name}</span>}
-              </Component>
+              </Link>
             );
           })}
         </nav>
@@ -204,7 +213,7 @@ export default function Sidebar({ role }: SidebarProps) {
             }
 
             const data = await response.json();
-            window.location.href = `/interview/${data.interviewId}`;
+            window.location.href = `/interview/${data.jobId}`;
           } catch (error) {
             throw error;
           }

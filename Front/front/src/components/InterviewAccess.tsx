@@ -6,28 +6,29 @@ import { motion, AnimatePresence } from 'framer-motion';
 interface InterviewAccessProps {
   isOpen: boolean;
   onClose: () => void;
-  onSubmit: (code: string) => void;
+  onSubmit: (code: string) => Promise<void>;
 }
 
 export default function InterviewAccess({ isOpen, onClose, onSubmit }: InterviewAccessProps) {
-  const [accessCode, setAccessCode] = useState('');
-  const [error, setError] = useState('');
+  const [code, setCode] = useState('');
+  const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!accessCode.trim()) {
+    if (!code.trim()) {
       setError('Please enter the access code');
       return;
     }
 
     setIsLoading(true);
-    setError('');
+    setError(null);
 
     try {
-      await onSubmit(accessCode);
-    } catch (error) {
+      await onSubmit(code);
+    } catch (err) {
       setError('Invalid access code. Please try again.');
+      console.error(err);
     } finally {
       setIsLoading(false);
     }
@@ -37,7 +38,13 @@ export default function InterviewAccess({ isOpen, onClose, onSubmit }: Interview
     <AnimatePresence>
       {isOpen && (
         <>
-          <div className="fixed inset-0 bg-black/30 backdrop-blur-md z-40" onClick={onClose} />
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 bg-black/30 backdrop-blur-md z-40"
+            onClick={onClose}
+          />
           <motion.div
             initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
@@ -59,10 +66,10 @@ export default function InterviewAccess({ isOpen, onClose, onSubmit }: Interview
                   <input
                     type="text"
                     id="accessCode"
-                    value={accessCode}
+                    value={code}
                     onChange={(e) => {
-                      setAccessCode(e.target.value);
-                      setError('');
+                      setCode(e.target.value);
+                      setError(null);
                     }}
                     className="w-full px-4 py-2 bg-gray-800 border border-gray-700 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-white placeholder-gray-400"
                     placeholder="Enter your access code"
@@ -70,8 +77,8 @@ export default function InterviewAccess({ isOpen, onClose, onSubmit }: Interview
                   />
                   {error && <p className="mt-2 text-sm text-red-400">{error}</p>}
                 </div>
-
-                <div className="flex justify-end space-x-3">
+                
+                <div className="flex justify-end space-x-3 pt-4">
                   <button
                     type="button"
                     onClick={onClose}

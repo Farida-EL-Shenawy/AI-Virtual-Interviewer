@@ -33,7 +33,7 @@ const Hero = () => {
                 Get Started
               </a>
               <a
-                href="/learn-more"
+                href="/about"
                 className="inline-flex items-center justify-center px-6 py-3 border border-gray-300 dark:border-gray-600 text-base font-medium rounded-lg text-gray-700 dark:text-gray-200 bg-white/30 dark:bg-white/10 backdrop-blur-md hover:bg-white/40 dark:hover:bg-white/20 transition duration-150 ease-in-out"
               >
                 Learn More

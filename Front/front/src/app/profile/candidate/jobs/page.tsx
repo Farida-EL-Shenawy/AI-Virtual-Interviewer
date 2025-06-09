@@ -1,22 +1,24 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import Link from 'next/link';
 import Sidebar from '@/components/Sidebar';
 
 interface JobPost {
-  id: number;
+  _id: string;
   title: string;
-  company: string;
+  companyId: string;
   location: string;
-  type: string;
-  salary: string;
+  employmentType: string;
+  salaryRange: {
+    min?: number;
+    max?: number;
+    currency: string;
+  };
   description: string;
-  requirements: string;
+  requirements: string[];
   postedDate: string;
-  applicants: number;
-  status: string;
 }
 
 interface ApplicationFormData {
@@ -30,6 +32,7 @@ interface ApplicationFormData {
 export default function CandidateJobsPage() {
   const [searchQuery, setSearchQuery] = useState('');
   const [filterType, setFilterType] = useState('all');
+  const [jobs, setJobs] = useState<JobPost[]>([]);
   const [selectedJob, setSelectedJob] = useState<JobPost | null>(null);
   const [showApplicationForm, setShowApplicationForm] = useState(false);
   const [applicationData, setApplicationData] = useState<ApplicationFormData>({
@@ -40,42 +43,30 @@ export default function CandidateJobsPage() {
     resume: null
   });
 
-  // Mock data - replace with actual API calls
-  const [jobs, setJobs] = useState<JobPost[]>([
-    {
-      id: 1,
-      title: 'Senior Software Engineer',
-      company: 'Tech Corp',
-      location: 'New York, NY',
-      type: 'Full-time',
-      salary: '$120,000 - $150,000',
-      description: 'We are looking for an experienced software engineer to join our team...',
-      requirements: '5+ years of experience in web development, strong JavaScript skills...',
-      postedDate: '2024-02-20',
-      applicants: 45,
-      status: 'Active'
-    },
-    {
-      id: 2,
-      title: 'UI/UX Designer',
-      company: 'Design Studio',
-      location: 'Remote',
-      type: 'Contract',
-      salary: '$80,000 - $100,000',
-      description: 'Seeking a creative UI/UX designer to help shape our product...',
-      requirements: '3+ years of experience in UI/UX design, proficiency in Figma...',
-      postedDate: '2024-02-18',
-      applicants: 28,
-      status: 'Active'
+  useEffect(() => {
+    fetchJobs();
+  }, []);
+
+  const fetchJobs = async () => {
+    try {
+      const response = await fetch('/api/jobs');
+      if (response.ok) {
+        const data = await response.json();
+        setJobs(data);
+      } else {
+        console.error('Failed to fetch jobs');
+      }
+    } catch (error) {
+      console.error('Error fetching jobs:', error);
     }
-  ]);
+  };
 
   const filteredJobs = jobs.filter(job => {
     const matchesSearch = job.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      job.company.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      (job.companyId && job.companyId.toLowerCase().includes(searchQuery.toLowerCase())) ||
       job.location.toLowerCase().includes(searchQuery.toLowerCase());
     
-    const matchesType = filterType === 'all' || job.type.toLowerCase() === filterType.toLowerCase();
+    const matchesType = filterType === 'all' || job.employmentType.toLowerCase() === filterType.toLowerCase();
     
     return matchesSearch && matchesType;
   });
@@ -154,7 +145,7 @@ export default function CandidateJobsPage() {
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {filteredJobs.map((job) => (
                 <motion.div
-                  key={job.id}
+                  key={job._id}
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ duration: 0.3 }}
@@ -163,10 +154,10 @@ export default function CandidateJobsPage() {
                   <div className="flex justify-between items-start mb-4">
                     <div>
                       <h3 className="text-xl font-semibold text-white mb-1">{job.title}</h3>
-                      <p className="text-gray-300">{job.company}</p>
+                      <p className="text-gray-300">{job.companyId}</p>
                     </div>
                     <span className="px-2 py-1 rounded text-xs font-medium bg-blue-500/20 text-blue-400">
-                      {job.type}
+                      {job.employmentType}
                     </span>
                   </div>
 
@@ -182,7 +173,7 @@ export default function CandidateJobsPage() {
                       <svg className="h-5 w-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                       </svg>
-                      {job.salary}
+                      {job.salaryRange?.min && job.salaryRange?.max ? `${job.salaryRange.min} - ${job.salaryRange.max} ${job.salaryRange.currency}` : 'Not specified'}
                     </div>
                   </div>
 
@@ -219,7 +210,7 @@ export default function CandidateJobsPage() {
             <div className="flex justify-between items-start mb-6">
               <div>
                 <h2 className="text-2xl font-bold text-white mb-2">{selectedJob.title}</h2>
-                <p className="text-gray-300">{selectedJob.company}</p>
+                <p className="text-gray-300">{selectedJob.companyId}</p>
               </div>
               <button
                 onClick={() => {
