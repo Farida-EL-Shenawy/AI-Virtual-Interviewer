@@ -114,11 +114,11 @@ python main.py
 
 This project was developed as part of the graduation requirement at Helwan University. Special thanks to our supervisor, reviewers, and open-source contributors who made this possible.
 
-Team: Farida Khaled 
-      Esraa Mohammed 
-      Madiha Saied 
-      Hania Ruby
-      Mohammed Tarek
+Team: Farida Khaled,
+      Esraa Mohammed, 
+      Madiha Saied,
+      Hania Ruby,
+      Mohammed Tarek,
       Muhammed Yasser
 ---
 
