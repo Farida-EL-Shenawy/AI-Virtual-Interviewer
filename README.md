@@ -1,5 +1,3 @@
-# AI-Virtual-Interviewer
-
 # 🤖 Virtual AI Interviewer
 
 Welcome to the official repository for our **AI Interviewer Graduation Project** — a virtual, intelligent system that simulates real-world job interviews using multimodal AI. Built to evaluate candidate responses in real time, this system integrates NLP, speech processing, emotion recognition, and adaptive questioning.
