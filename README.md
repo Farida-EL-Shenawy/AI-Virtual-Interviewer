@@ -40,8 +40,7 @@ The Virtual AI Interviewer is an adaptive, role-aware system that:
 ---
 
 ## 🧠 System Architecture (Pipeline)
-
-```mermaid
+```
 graph TD
     A[User Input: Role, Skills] --> B[Retrieve Context (Qdrant)]
     B --> C[Build Prompt (LLaMA 3.3)]
@@ -113,10 +112,14 @@ python main.py
 
 ## 📣 Team & Acknowledgments
 
-This project was developed as part of the graduation requirement at \[Your University Name]. Special thanks to our supervisor, reviewers, and open-source contributors who made this possible.
+This project was developed as part of the graduation requirement at Helwan University. Special thanks to our supervisor, reviewers, and open-source contributors who made this possible.
 
-Team: \[Add Your Names Here]
-
+Team: Farida Khaled 
+      Esraa Mohammed 
+      Madiha Saied 
+      Hania Ruby
+      Mohammed Tarek
+      Muhammed Yasser
 ---
 
 ## 📌 License
